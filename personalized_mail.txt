@@ -1,0 +1,55 @@
+// Function to send personalized emails based on the extracted emails
+function sendPersonalizedEmails() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName('Sheet1'); // Use the correct sheet name
+
+  // Check if the sheet exists
+  if (!sheet) {
+    Logger.log("Sheet 'Sheet1' not found.");
+    return;
+  }
+
+  // Get all rows except the header
+  const rows = sheet.getDataRange().getValues().slice(1);
+
+  Logger.log("Rows to process: " + rows.length);
+
+  rows.forEach(row => {
+    const timestamp = row[0];
+    const threadCount = row[1];
+    const fromEmail = row[2];
+    const toEmail = row[3]; // Ensure toEmail is correctly assigned from the row
+    const subject = row[4];
+    const emailLink = row[5];
+
+    const emailBody = createEmailBody(timestamp, threadCount, fromEmail, toEmail, subject, emailLink);
+
+    try {
+      // Send the email
+      MailApp.sendEmail(toEmail, `Personalized Email: ${subject}`, '', {
+        htmlBody: emailBody
+      });
+      Logger.log(`Sent email to: ${toEmail}`);
+    } catch (e) {
+      Logger.log("Error sending email: " + e.toString());
+    }
+  });
+
+  Logger.log("Personalized emails sent.");
+}
+
+function createEmailBody(timestamp, threadCount, fromEmail, toEmail, subject, emailLink) {
+  var htmlBody = `
+    <p>Dear ${toEmail},</p>
+    <p>You have a new email with the following details:</p>
+    <ul>
+      <li><strong>Timestamp:</strong> ${timestamp}</li>
+      <li><strong>Thread Count:</strong> ${threadCount}</li>
+      <li><strong>From Email:</strong> ${fromEmail}</li>
+      <li><strong>Subject:</strong> ${subject}</li>
+      <li><strong>Email Link:</strong> <a href="${emailLink}">View Email</a></li>
+    </ul>
+    <p>Best regards,<br>Your Name</p>
+  `;
+  return htmlBody;
+}

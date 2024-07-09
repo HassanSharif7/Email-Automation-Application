@@ -1,0 +1,39 @@
+// Function to clear the sheet
+function clearSheet() {
+  var sheet = SpreadsheetApp.getActiveSheet();
+  sheet.clear(); // Clear all data
+}
+
+// Function to export first 50 inbox emails to Google Sheet
+function exportInboxEmailsToSheet() {
+  var sheet = SpreadsheetApp.getActiveSheet();
+  clearSheet(); // Clear old output
+
+  // Set the headers
+  sheet.getRange("A1:F1").setValues([["Timestamp", "Thread Count", "From Email", "To Email", "Mail Subject", "Email Link"]]);
+
+  var data = [];
+  var batchSize = 50; // Limit to 50 emails
+  var threads;
+  var totalEmails = 0;
+
+  threads = GmailApp.search('in:inbox', 0, batchSize);
+  for (var i = 0; i < threads.length; i++) {
+    var messages = threads[i].getMessages();
+    for (var j = 0; j < messages.length; j++) {
+      var message = messages[j];
+      var timestamp = message.getDate();
+      var threadCount = message.getThread().getMessageCount();
+      var fromEmail = message.getFrom();
+      var toEmail = message.getTo();
+      var subject = message.getSubject();
+      var messageId = message.getId();
+      var link = 'https://mail.google.com/mail/u/0/#inbox/' + messageId;
+      var row = [timestamp, threadCount, fromEmail, toEmail, subject, link];
+      data.push(row);
+      totalEmails++;
+    }
+  }
+  sheet.getRange(sheet.getLastRow() + 1, 1, data.length, data[0].length).setValues(data);
+  Logger.log("Exported " + totalEmails + " emails to sheet.");
+}
